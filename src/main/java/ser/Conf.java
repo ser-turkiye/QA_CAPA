@@ -20,36 +20,34 @@ public class Conf {
         public static final List<Integer> MailHideCols = List.of(0);
         public static final Integer MailColInx = 0;
     }
-    public static class WBInboxMailPaths {
-        public static final String MainPath = "C:/tmp2/bulk/wb-inboxmails";
-        public static final String EscalationMailPaths = "C:/tmp2/bulk/escalation-mails";
+    public static class CancelProcess {
+        public static final String MainPath = "C:/tmp2/bulk/cancelprocess";
         public static final String WebBase = "http://localhost/webcube/";
+    }
+    public static class CancelProcessSheetIndex {
+        public static final Integer Mail = 0;
     }
     public static class MainWFUpdateSheetIndex {
         public static final Integer Mail = 0;
     }
     public static class Databases{
         public static final String Company = "D_QCON";
-        public static final String ProjectFolder = "PRJ_FOLDER";
-        public static final String Process = "BPM";
+        public static final String CompanyFolder = "D_QA";
+        public static final String Process = "BPM_QA";
     }
     public static class ClassIDs{
-        public static final String Template = "b9cf43d1-a4d3-482f-9806-44ae64c6139d";
-        public static final String Transmittal = "8bf0a09b-b569-4aef-984b-78cf1644ca19";
-        public static final String SubReview = "629a28c4-6c36-44d0-90f7-1e5802f038e8";
-        public static final String ReviewMain = "69d42aaf-6978-4b5a-8178-88a78f4b3158";
-        public static final String ProjectWorkspace = "32e74338-d268-484d-99b0-f90187240549";
+        public static final String CompanyWorkspace = "5e664e59-3c81-48dd-925e-4e731f12ca65";
     }
     public static class Descriptors{
-        public static final String ProjectNo = "ccmPRJCard_code";
-        public static final String DocNumber = "ccmPrjDocNumber";
-        public static final String Revision = "ccmPrjDocRevision";
+        public static final String CompanyNo = "OrgCompanyDescription";
         public static final String Name = "ObjectName";
         public static final String TemplateName = "ObjectNumberExternal";
+        public static final String DocNumber = "ObjectNumber";
 
     }
     public static class DescriptorLiterals{
-        public static final String PrjCardCode = "CCMPRJCARD_CODE";
+        public static final String CompanyCode = "ORGCOMPANYDESCRIPTION";
         public static final String ObjectNumberExternal = "OBJECTNUMBER2";
     }
+
 }

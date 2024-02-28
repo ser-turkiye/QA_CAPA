@@ -16,13 +16,11 @@ import java.util.regex.Pattern;
 
 public class CAPA_OnCreate extends UnifiedAgent {
     private Logger log = LogManager.getLogger();
-    JSONObject projects = new JSONObject();
-    List<ITask> subprcss = new ArrayList<>();
-    List<ITask> mainprcss = new ArrayList<>();
     IStringMatrix settingsMatrix = null;
     IProcessInstance proi = null;
     ProcessHelper helper;
     ITask eventTask = null;
+    String nrName = "";
 
     @Override
     protected Object execute() {
@@ -41,7 +39,6 @@ public class CAPA_OnCreate extends UnifiedAgent {
 
             String number =  getNumber();
             log.info("QA_CAPA_OnChange NUMBER is:" + number);
-
             proi.setDescriptorValue("ObjectNumber",number);
             proi.commit();
             log.info("QA_CAPA_OnChange set number is:" + proi.getDescriptorValue("ObjectNumber"));
@@ -159,7 +156,7 @@ public class CAPA_OnCreate extends UnifiedAgent {
         String rtrn = "";
         String pattern = "";
         String nrStartS = "";
-        String nrCurrentS = "0";
+        String nrCurrentS = "";
         int rowcount = 0;
 
         if(settingsMatrix != null) {
@@ -171,6 +168,9 @@ public class CAPA_OnCreate extends UnifiedAgent {
                     break;
                 }
             }
+        }
+        if(nrCurrentS == ""){
+
         }
         return nrCurrentS;
     }
@@ -190,5 +190,21 @@ public class CAPA_OnCreate extends UnifiedAgent {
             srtMatrixModify.setValue(rowCount, 4, newValue, false);
             srtMatrixModify.commit();
         }
+    }
+    public void createLastNumberGVList(String rowID, String pattern){
+        String nrCurrentS = "";
+        IStringMatrixModifiable srtMatrixModify = settingsMatrix.getModifiableCopy(getSes());
+        settingsMatrix.refresh();
+        int rowCount = 0;
+        srtMatrixModify.appendRow();
+        srtMatrixModify.commit();
+        srtMatrixModify.refresh();
+        rowCount = srtMatrixModify.getRowCount()-1;
+        srtMatrixModify.setValue(rowCount, 0, rowID, false);
+        srtMatrixModify.setValue(rowCount, 1, pattern, false);
+        srtMatrixModify.setValue(rowCount, 2, "0", false);
+        srtMatrixModify.setValue(rowCount, 3, "", false);
+        srtMatrixModify.setValue(rowCount, 4, "0", false);
+        srtMatrixModify.commit();
     }
 }
