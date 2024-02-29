@@ -37,7 +37,7 @@ public class CAPA_OnCreate extends UnifiedAgent {
             if (proi == null) return resultError("Process Instance is NULL");
             //nrName = "QA.CPA";
             defaultPattern = "DF%yyyy%%N5%";
-            //String numberFormat = "QA.CPA.{OrgCompanyDescription}.%yyyy%";
+            //String numberFormat = "QA.CPA.{OrgCompanyDescription}.%yy%";
             String numberFormat = "QA.CPA";
             nrName = getNameFromPattern(proi,numberFormat);
             String reqNumber = getNumber(nrName);
@@ -144,8 +144,9 @@ public class CAPA_OnCreate extends UnifiedAgent {
     }
     public String getDateValue(String txt){
         String rtrn = "";
-        String nYear = new SimpleDateFormat("yyyy").format(new Date());
-        rtrn = txt.replaceAll("%yyyy%",nYear);
+        String yfrmt = txt.replaceAll("%","");
+        String nYear = (yfrmt.contains("y") ? new SimpleDateFormat(yfrmt).format(new Date()) : new SimpleDateFormat("yyyy").format(new Date()));
+        rtrn = txt.replaceAll("%" + yfrmt + "%",nYear);
         return rtrn;
     }
     public String getSequenceValue(String txt,String lastNumber){
