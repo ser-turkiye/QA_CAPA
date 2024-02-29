@@ -291,29 +291,29 @@ public class Utils {
     }
     public static IInformationObject getProjectWorkspace(String prjn, ProcessHelper helper) {
         StringBuilder builder = new StringBuilder();
-        builder.append("TYPE = '").append(Conf.ClassIDs.ProjectWorkspace).append("'")
+        builder.append("TYPE = '").append(Conf.ClassIDs.CompanyWorkspace).append("'")
                 .append(" AND ")
-                .append(Conf.DescriptorLiterals.PrjCardCode).append(" = '").append(prjn).append("'");
+                .append(Conf.DescriptorLiterals.CompanyCode).append(" = '").append(prjn).append("'");
         String whereClause = builder.toString();
         log.info("Where Clause: " + whereClause);
 
-        IInformationObject[] informationObjects = helper.createQuery(new String[]{Conf.Databases.ProjectFolder} , whereClause , "", 1, false);
+        IInformationObject[] informationObjects = helper.createQuery(new String[]{Conf.Databases.CompanyFolder} , whereClause , "", 1, false);
         if(informationObjects.length < 1) {return null;}
         return informationObjects[0];
     }
-    public static JSONObject getProjectWorkspaces( ProcessHelper helper) {
+    public static JSONObject getCompanyWorkspaceOLD( ProcessHelper helper) {
         StringBuilder builder = new StringBuilder();
-        builder.append("TYPE = '").append(Conf.ClassIDs.ProjectWorkspace).append("'");
+        builder.append("TYPE = '").append(Conf.ClassIDs.CompanyWorkspace).append("'");
         String whereClause = builder.toString();
         log.info("Where Clause: " + whereClause);
 
-        IInformationObject[] list = helper.createQuery(new String[]{Conf.Databases.ProjectFolder} , whereClause , "", 0, false);
+        IInformationObject[] list = helper.createQuery(new String[]{Conf.Databases.CompanyFolder} , whereClause , "", 0, false);
         JSONObject rtrn = new JSONObject();
 
         for(IInformationObject item : list){
-            if(!hasDescriptor(item, Conf.Descriptors.ProjectNo)){continue;}
+            if(!hasDescriptor(item, Conf.Descriptors.CompanyNo)){continue;}
 
-            String prjn = item.getDescriptorValue(Conf.Descriptors.ProjectNo, String.class);
+            String prjn = item.getDescriptorValue(Conf.Descriptors.CompanyNo, String.class);
             prjn = (prjn == null ? "" : prjn);
 
             if(prjn.isEmpty()){continue;}
@@ -323,63 +323,40 @@ public class Utils {
 
         return rtrn;
     }
-    public static List<ITask> getSubReviewProcesses(ProcessHelper helper, JSONObject projects) {
-        List<ITask> rtrn = new ArrayList<>();
-        for(String prjn : projects.keySet()) {
-            StringBuilder builder = new StringBuilder();
-            builder.append("TYPE = '").append(Conf.ClassIDs.SubReview).append("'");
-            builder.append(" AND CCMPRJCARD_CODE = '").append(prjn).append("'");
-            builder.append(" AND WFL_TASK_STATUS IN (2,4,16)");
-            builder.append(" AND WFL_TASK_CODE = 'review'");
-            String whereClause = builder.toString();
-            log.info("Where Clause: " + whereClause);
+    public static String saveDocReviewExcel(String templatePath, Integer shtIx, String tpltSavePath, JSONObject pbks) throws IOException {
 
-            IInformationObject[] list = helper.createQuery(new String[]{Conf.Databases.Process}, whereClause, "", 0, false);
+        FileInputStream tist = new FileInputStream(templatePath);
+        XSSFWorkbook twrb = new XSSFWorkbook(tist);
 
-            for (IInformationObject item : list) {
-                if (!hasDescriptor(item, Conf.Descriptors.ProjectNo)) {
-                    continue;
+        Sheet tsht = twrb.getSheetAt(shtIx);
+        for (Row trow : tsht){
+            for(Cell tcll : trow){
+                if(tcll.getCellType() != CellType.STRING){continue;}
+                String clvl = tcll.getRichStringCellValue().getString();
+                String clvv = updateCell(clvl, pbks);
+                if(!clvv.equals(clvl)){
+                    tcll.setCellValue(clvv);
                 }
-                //String prjn = item.getDescriptorValue(Conf.Descriptors.ProjectNo, String.class);
-                prjn = (prjn == null ? "" : prjn);
 
-                if (prjn.isEmpty()) {
-                    continue;
+                if(clvv.indexOf("[[") != (-1) && clvv.indexOf("]]") != (-1)
+                        && clvv.indexOf("[[") < clvv.indexOf("]]")){
+                    String znam = clvv.substring(clvv.indexOf("[[") + "[[".length(), clvv.indexOf("]]"));
+                    if(pbks.has(znam)){
+                        tcll.setCellValue(znam);
+                        String lurl = pbks.getString(znam);
+                        if(!lurl.isEmpty()) {
+                            Hyperlink link = twrb.getCreationHelper().createHyperlink(HyperlinkType.URL);
+                            link.setAddress(lurl);
+                            tcll.setHyperlink(link);
+                        }
+                    }
                 }
-                //if(rtrn.has(prjn)){continue;}
-                rtrn.add((ITask) item);
             }
         }
-        return rtrn;
-    }
-    public static List<ITask> getMainReviewProcesses(ProcessHelper helper, JSONObject projects, String taskCode) {
-        List<ITask> rtrn = new ArrayList<>();
-        for(String prjn : projects.keySet()) {
-            StringBuilder builder = new StringBuilder();
-            builder.append("TYPE = '").append(Conf.ClassIDs.ReviewMain).append("'");
-            builder.append(" AND CCMPRJCARD_CODE = '").append(prjn).append("'");
-            builder.append(" AND WFL_TASK_STATUS IN (2,4,16)");
-            builder.append(" AND WFL_TASK_CODE = '"+taskCode+"'");
-            String whereClause = builder.toString();
-            log.info("Where Clause: " + whereClause);
-
-            IInformationObject[] list = helper.createQuery(new String[]{Conf.Databases.Process}, whereClause, "", 0, false);
-
-            for (IInformationObject item : list) {
-                if (!hasDescriptor(item, Conf.Descriptors.ProjectNo)) {
-                    continue;
-                }
-                //String prjn = item.getDescriptorValue(Conf.Descriptors.ProjectNo, String.class);
-                prjn = (prjn == null ? "" : prjn);
-
-                if (prjn.isEmpty()) {
-                    continue;
-                }
-                //if(rtrn.has(prjn)){continue;}
-                rtrn.add((ITask) item);
-            }
-        }
-        return rtrn;
+        FileOutputStream tost = new FileOutputStream(tpltSavePath);
+        twrb.write(tost);
+        tost.close();
+        return tpltSavePath;
     }
     public static IDocument getTemplateDocument(IInformationObject info, String tpltName) throws Exception {
         List<INode> nods = ((IFolder) info).getNodesByName("Templates");
@@ -444,7 +421,9 @@ public class Utils {
         }
         return rtrn;
     }
-    public static void sendHTMLMail(JSONObject mcfg, JSONObject pars) throws Exception {
+    static void sendHTMLMail(JSONObject pars) throws Exception {
+        JSONObject mcfg = Utils.getMailConfig();
+
         String host = mcfg.getString("host");
         String port = mcfg.getString("port");
         String protocol = mcfg.getString("protocol");
@@ -514,9 +493,9 @@ public class Utils {
             };
         }
         props.put("mail.mime.charset","UTF-8");
-        Session sess = (authenticator == null ? Session.getDefaultInstance(props) : Session.getDefaultInstance(props, authenticator));
+        Session session = (authenticator == null ? Session.getDefaultInstance(props) : Session.getDefaultInstance(props, authenticator));
 
-        MimeMessage message = new MimeMessage(sess);
+        MimeMessage message = new MimeMessage(session);
         message.setFrom(new InternetAddress(sender.replace(";", ",")));
         message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(mailTo.replace(";", ",")));
         message.setRecipients(Message.RecipientType.CC, InternetAddress.parse(mailCC.replace(";", ",")));
@@ -547,5 +526,26 @@ public class Utils {
         message.setContent(multipart);
         Transport.send(message);
 
+    }
+    static JSONObject getSystemConfig() throws Exception {
+        return getSystemConfig(null);
+    }
+    static JSONObject getSystemConfig(IStringMatrix mtrx) throws Exception {
+        if(mtrx == null){
+            mtrx = server.getStringMatrix("CCM_SYSTEM_CONFIG", session);
+        }
+        if(mtrx == null) throw new Exception("SystemConfig Global Value List not found");
+
+        List<List<String>> rawTable = mtrx.getRawRows();
+
+        String srvn = session.getSystem().getName().toUpperCase();
+        JSONObject rtrn = new JSONObject();
+        for(List<String> line : rawTable) {
+            String name = line.get(0);
+            if(!name.toUpperCase().startsWith(srvn + ".")){continue;}
+            name = name.substring(srvn.length() + ".".length());
+            rtrn.put(name, line.get(1));
+        }
+        return rtrn;
     }
 }
